@@ -38,7 +38,7 @@ def validate_signup(password, verify, username):
     
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'register', 'static']
+    allowed_routes = ['login', 'signup', 'index', 'blog']
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect('/login')
 
@@ -68,7 +68,7 @@ def login():
         if user and password == user.password:
             session['username'] = username
             flash("Logged in", 'info')
-            return redirect('/')
+            return redirect('/newpost')
         else:
             flash('User password incorrect, or user does not exist', 'error')
 
@@ -85,14 +85,22 @@ def logout():
 @app.route('/blog', methods=['GET'])
 def blog():
 
+    if request.args.get('user'):
+        username = request.args.get('user')
+        user = User.query.filter_by(username=username).first()
+        posts = Post.query.filter_by(owner_id=user.id)
+
+        return render_template('posts.html', 
+            title = "It's a blog!", 
+            posts=posts)
+
     if request.args.get('post_id'):
         post_id = request.args.get('post_id')
-        post = Post.query.get(post_id)
+        post = Post.query.filter_by(id=post_id)
 
-        return render_template('post.html', 
+        return render_template('posts.html', 
             title = "It's a blog!", 
-            post_title = post.title, 
-            content = post.content)
+            posts=post)
 
     posts = Post.query.all()
     
@@ -120,7 +128,13 @@ def newpost():
         title = "Add a Blog Entry!") 
 
 @app.route('/', methods=['GET','POST'])
-def newpost():
+def index():
+
+    users = User.query.all()
+
+    return render_template('index.html',
+        title="It's a Blog!", 
+        users=users)
 
 if __name__ == '__main__':
     app.run()
