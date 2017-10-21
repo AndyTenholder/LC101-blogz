@@ -2,6 +2,7 @@ from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from app import app, db
 from models import Post, User
+from hashutils import check_pw_hash
 
 def validate_signup(password, verify, username):
 
@@ -65,7 +66,7 @@ def login():
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
 
-        if user and password == user.password:
+        if user and check_pw_hash(password, user.pw_hash):
             session['username'] = username
             flash("Logged in", 'info')
             return redirect('/newpost')
