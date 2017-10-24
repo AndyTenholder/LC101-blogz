@@ -6,11 +6,11 @@
     <form action="/newpost" method="POST" id="blog">
         <label>
         Title: 
-        <input type="text" name="title">
+        <input type="text" name="title" value="{{post_title}}">
         </label>
         <input type="submit">
     </form>
     <br>
-    <textarea rows="4" cols="50" name="contents" form="blog"></textarea>
+    <textarea rows="4" cols="50" name="contents" form="blog">{{post_contents}}</textarea>
 
 {% endblock %}

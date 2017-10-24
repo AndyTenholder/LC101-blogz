@@ -45,6 +45,7 @@ def require_login():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    username = ""
     if request.method == 'POST':
         password = request.form['password']
         verify = request.form['verify']
@@ -55,9 +56,9 @@ def signup():
             db.session.add(new_user)
             db.session.commit()
             session['username'] = username
-            return redirect('/')
+            return redirect('/newpost')
 
-    return render_template('signup.html')
+    return render_template('signup.html', username = username)
 
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -69,7 +70,7 @@ def login():
         if user and check_pw_hash(password, user.pw_hash):
             session['username'] = username
             flash("Logged in", 'info')
-            return redirect('/newpost')
+            return redirect('/')
         else:
             flash('User password incorrect, or user does not exist', 'error')
 
@@ -79,9 +80,6 @@ def login():
 def logout():
     del session['username']
     return redirect('/')
-
-#@app.route('/user', methods=['GET'])
-#def singleUser():
 
 @app.route('/blog', methods=['GET'])
 def blog():
@@ -97,11 +95,12 @@ def blog():
 
     if request.args.get('post_id'):
         post_id = request.args.get('post_id')
-        post = Post.query.filter_by(id=post_id)
+        post = Post.query.filter_by(id=post_id).first()
+        post_list={post}
 
         return render_template('posts.html', 
             title = "It's a blog!", 
-            posts=post)
+            posts=post_list)
 
     posts = Post.query.all()
     
@@ -113,17 +112,30 @@ def blog():
 def newpost():
 
     user = User.query.filter_by(username=session['username']).first()
+    title = ""
+    contents = ""
 
     if request.method == 'POST':
-        title = request.form['title']
-        contents = request.form['contents']
+        post_title = request.form['title']
+        post_contents = request.form['contents']
+
+        if not post_title:
+            flash('Need a title', 'error')
+            return render_template('add.html', 
+            post_contents=post_contents)
+
+        if not post_contents:
+            flash('Need contents', 'error')
+            return render_template('add.html',
+            post_title=post_title)
+
         post = Post(title, contents, user)
         db.session.add(post)
         db.session.commit()
-        return render_template('post.html', 
-            title = "It's a blog!", 
-            post_title = post.title, 
-            content = post.content)
+        post_list = {post}
+        return render_template('posts.html',
+        title="It's a Blog!", 
+        posts = post_list)
 
     return render_template('add.html', 
         title = "Add a Blog Entry!") 
